@@ -1,0 +1,19 @@
+{
+    "name": "dsantos/spotcli",
+    "description": "CLi for spotpromo systems",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Dsantos\\Spotcli\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Daniels Hogans",
+            "email": "daniel.santos.ap@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}

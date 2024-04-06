@@ -1,0 +1,7 @@
+<?php
+/**
+ * Spotcli
+ * Describe : Programming and process automation tool from the company spotpromo and its s3 system
+ * version
+ */
+print_r($argv);
