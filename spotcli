@@ -1,7 +1,146 @@
+#!/usr/bin/php
 <?php
 /**
  * Spotcli
  * Describe : Programming and process automation tool from the company spotpromo and its s3 system
  * version
  */
-print_r($argv);
+// força execução somente em linha de comando
+if (php_sapi_name() !== 'cli') {
+    exit("Este script deve ser executado na linha de comando.\n");
+}
+require __DIR__.'/vendor/autoload.php';
+require __DIR__.'/envcli.php';
+require WORK_PATH.'/env.php';
+// require WORK_PATH.'/env.php';
+// require_once WORK_PATH.'/admin_new/modules/bootstrap.php';
+function calldb() {
+	$hostname = DB_HOST;
+	$dbname   = DB_NAME;
+	$username = DB_USER;
+	$pw       = DB_PASS;
+
+	$dbh      = new \PDO ("sqlsrv:Server=$hostname;Database=$dbname","$username","$pw");
+	$dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+	
+	return $dbh;
+}
+$conn = calldb();
+
+$query = function ($sql) use ($conn) {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+};
+$insert = function ($sql) use ($conn) {
+    $stmt = $conn->prepare($sql);
+    return $stmt->execute();
+    
+};
+// print_r($conn);
+// exit;
+use Spotpromo\Spotcli\Base;
+// Verifica se foi passado pelo menos um argumento
+// if ($argc < 2) {
+//     Base::getHelp();
+//     exit();
+// } else {
+//     Base::startCli($argv);
+// }
+switch ($argv[2]) {
+    case 'query':
+        $table = $argv[3];
+        $sql = 'SELECT COLUMN_NAME as colunas FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \''.$table.'\'';
+        // $sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = \'BASE TABLE\'';
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $columns = [];
+        foreach($resultados as $result){
+            array_push($columns, $result['colunas']);
+        }
+        if (isset($argv[4]) && $argv[4] == 'join'){
+            // Field::inst( 'BANDA_PRECO_BANDEIRA.COD_BANDEIRA' )
+            $fields = [];
+            foreach($columns as $coluna){
+                array_push($fields, 'Field::inst( "'.$table.'.'.$coluna.'" )');
+            }
+            print_r($fields);
+            exit;
+        } else {
+            $fields = [];
+            foreach($columns as $coluna){
+                array_push($fields, 'Field::inst( "'.$coluna.'" )');
+            }
+            print_r($fields);
+            exit;
+        }
+        print_r($columns);
+    break;
+    case 'menuquery':
+        // selecionar modulo
+        $sql = 'select id, name from MenuCategory where status=1 order by id';
+        $modules = [];
+        system('clear');
+        echo "CRIAÇÃO DE MENU: \n";
+        foreach ($query($sql) as $key => $option) {
+            $modules[$option['id']] = $option['name'];
+            echo $option['id']."  - " .$option['name']."\n";
+        }
+        $modulo = readline("Selecione um Módulo: \n");
+        // selecionar grupo
+        $grupos=[];
+        $sql = 'select id, name from MenuGroup where status=1 order by id';
+        system('clear');
+        echo "CRIAÇÃO DE MENU: \n";
+        echo "Modulo: ".$modules[$modulo] . "\n";
+        foreach ($query($sql) as $key => $option) {
+            $grupos[$option['id']] = $option['name'];
+            echo $option['id']."  - ".$option['name']."\n";
+        }
+        $grupo = readline("Selecione um Grupo: \n");
+        // $grupoSelecionado = $grupo;
+        system('clear');
+        echo "CRIAÇÃO DE MENU: \n";
+        echo "Modulo: ".$modules[$modulo] . ' > '.$grupos[$grupo] . "\n";
+        $name = readline("Digite o nome do menu: \n");
+        $description = readline("Faça uma breve descrição: \n");
+        $module_name = readline("Pasta do Mobulo/Menu: \n");
+        $sql = 'insert into MenuNovo (name, description, module_name, flag_translate, menu_group_id, menu_category_id, status) ';
+        $sql .= "values ('$name', '$description', '$module_name', ' ', $grupo, $modulo, 1)";
+        if($insert($sql)){
+            system('clear');
+            echo 'Menu Criado com Sucesso!';
+        } else {
+            system('clear');
+            echo 'Erro na criação do menu!';
+        }
+    break;
+    case 'createmodule':
+        $dir = readline("Qual o nome da pasta? \n");
+        $path = WORK_PATH.'/admin_new/modules';
+        if (mkdir($path.'/'.$dir)){
+            echo 'Pasta criada com Sucesso!';
+        };
+    break;
+    case 'createquery':
+        // print_r($argv);
+        // exit;
+        $path = WORK_PATH.'/admin_new/modules';
+        include('spotpromocli/AutoDataTables.php');
+        $table =  strtoupper(readline("Qual o nome da tabela? \n"));
+        $datatables = new AutodataTables;
+        $sql = "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$table'";
+        $resultSet = $query($sql);
+        if ($argv[3] == 'join'){
+                echo $datatables->createQuery($table, $resultSet, true)."\n";
+                echo $datatables->joins($table, $argv[4])."\n";
+            } else {
+                echo $datatables->createQuery($table, $resultSet);
+            };
+    break;
+    
+    default:
+        # code...
+        break;
+}
