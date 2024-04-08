@@ -135,9 +135,79 @@ switch ($argv[2]) {
         if ($argv[3] == 'join'){
                 echo $datatables->createQuery($table, $resultSet, true)."\n";
                 echo $datatables->joins($table, $argv[4])."\n";
+                echo $datatables->optionSelect($argv[4]);
             } else {
                 echo $datatables->createQuery($table, $resultSet);
             };
+    break;
+    case 'jscolumns':
+        $path = WORK_PATH.'/admin_new/modules';
+        include('spotpromocli/AutoEditor.php');
+        $columns = new AutoEditor;
+        system('clear');
+        $rootlist = array_diff(scandir($path), ['.', '..', '.DS_Store', '.env']);
+        foreach ($rootlist as $key => $value) {
+            echo $key .' - '. $value ."\n";
+        }
+        $dir = readline("Qual o diretorio que está o arquivo a Ler? :\n\n");
+        $root = $rootlist[$dir];
+        system('clear');
+        $directorylist = array_diff(scandir($path.'/'.$root), ['.', '..', '.DS_Store', '.env']);
+        foreach ($directorylist as $key => $value) {
+            echo $key .' - '. $value ."\n";
+        }
+        $dir = readline("Qual o sub-diretorio ? :\n\n");
+        $dir = $directorylist[$dir];
+        system('clear');
+        $loadfile = array_diff(scandir($path.'/'.$root.'/'.$dir), ['.', '..', '.DS_Store', '.env']);
+        foreach ($loadfile as $key => $value) {
+            echo $key .' - '. $value ."\n";
+        }
+        $file = readline("Qual o arquivo ? :\n\n");
+        $patterns = $columns->getColums($path.'/'.$root.'/'.$dir.'/'.$loadfile[$file]);
+        system('clear');
+        echo '**** Campo Columns ****'."\n";
+        $columns->creatJsColuns($columns->CleanPatterms($patterns));
+        echo '**** Parte da Tabela ****'."\n";
+        echo $columns->createTableRow($columns->CleanPatterms($patterns))."\n";
+        echo '**** Campo fields ****'."\n";
+        echo $columns->creatJsFields($columns->CleanPatterms($patterns))."\n";
+        // print_r($filename);
+        // $columns->getColums($a=1);
+        // echo 'data js columns';
+    break;
+    case 'createimport':
+        $table = strtoupper($argv[3]);
+        $sql = 'SELECT COLUMN_NAME as colunas FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \''.$table.'\'';
+        system('clear');
+        echo '.....COLUNAS PARA IMPORTACAO......'."\n";
+        foreach ($query($sql) as $key => $value) {
+                echo $key .' - '. $value['colunas']. "\n";
+        }
+        $selectColuns = readline("Quais colunas que criar importação? Separe por '-' os numeros. >");
+        echo 'Selecionados as colunas: '. str_replace('-', ' ,', $selectColuns);
+        system('clear');
+        $path = WORK_PATH.'/admin_new/modules/importar_arquivos/archives/';
+        include('spotpromocli/AutoImport.php');
+        $excel = new AutoImport;
+        // $selectColuns = $excel->getColsName($query($sql), $selectColuns);
+        $selectColuns = $excel->getColsName($query($sql), $selectColuns);
+        system('clear');
+        $modelName = readline('Qual o nome do modelo de arquivo? >');
+        if($excel->gerarExcel($selectColuns, $path, $modelName)){
+            system('clear');
+            echo 'Excel modelo de importação gerado com sucesso!.';
+        } else {
+            system('clear');
+            echo 'Houve falha na geração do Excel de modelo';
+        }
+        system('clear');
+        echo 'Gerando HTML text para o arquivo index.php do import';
+        $sql = 'SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_CATALOG = \''
+        .DB_NAME.'\' AND TABLE_NAME=\''.$table.'\' AND COLUMN_NAME IN (\''.implode("', '", $selectColuns).'\')';
+        echo "\n".'**** Campo Columns ****'."\n";
+        echo $excel->htmlTable($modelName, $query($sql));
+        echo "\n".'**** Campo Columns ****'."\n";
     break;
     
     default:

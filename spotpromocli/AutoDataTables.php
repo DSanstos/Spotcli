@@ -35,7 +35,7 @@ class AutodataTables
     public function joins($tableCrud, $tables)
     {
         $joinsText = "\n";
-        $tables = explode('-', strtoupper($tables));
+        $tables = $this->toArray($tables);
         foreach ($tables as $table) {
             $joinsText .= "->leftjoin('$table', '$table.COD_$table', '=', '$tableCrud.COD_$table') \n";
         }
@@ -43,9 +43,18 @@ class AutodataTables
     }
     public function optionSelect($tables)
     {
-        //     ->validator( Validate::notEmpty( ValidateOptions::inst()
-        //         ->message( 'Campo obrigatório!' )
-        //     ) )
-        return print_r($tables);
+        $optionText = '';
+        $tables = $this->toArray($tables);
+        foreach ($tables as $table) {
+            $validation = "->validator( Validate::notEmpty( ValidateOptions::inst()->message( 'Campo obrigatório!' )"
+            .  ") )->options( Options::inst()->table( '$table' )->value( 'COD_$table' )->label( 'DES_$table' )->where( function(".'$q'.") {"
+            .'$q '. '->where( function($r) { $r ->where(\'STA_'.$table.'\', 1); }); } ) ),';
+            $optionText .= $validation; 
+        }
+        return $optionText;
+    }
+    public function toArray($argv)
+    {
+        return explode('-', strtoupper($argv));
     }
 }
