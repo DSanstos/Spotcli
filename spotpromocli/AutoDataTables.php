@@ -57,4 +57,8 @@ class AutodataTables
     {
         return explode('-', strtoupper($argv));
     }
+    public static function helpText()
+    {
+        return '';
+    }
 }

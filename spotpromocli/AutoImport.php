@@ -69,4 +69,8 @@ class AutoImport
     </tr>';
     return $html;
     }
+    public static function helpText()
+    {
+        return '';
+    }
 }

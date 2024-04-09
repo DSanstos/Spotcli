@@ -3,7 +3,7 @@
 /**
  * Spotcli
  * Describe : Programming and process automation tool from the company spotpromo and its s3 system
- * version
+ * version: 0.1
  */
 // força execução somente em linha de comando
 if (php_sapi_name() !== 'cli') {
@@ -12,41 +12,43 @@ if (php_sapi_name() !== 'cli') {
 require __DIR__.'/vendor/autoload.php';
 require __DIR__.'/envcli.php';
 require WORK_PATH.'/env.php';
-// require WORK_PATH.'/env.php';
 // require_once WORK_PATH.'/admin_new/modules/bootstrap.php';
 function calldb() {
 	$hostname = DB_HOST;
 	$dbname   = DB_NAME;
 	$username = DB_USER;
 	$pw       = DB_PASS;
-
 	$dbh      = new \PDO ("sqlsrv:Server=$hostname;Database=$dbname","$username","$pw");
 	$dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-	
 	return $dbh;
 }
 $conn = calldb();
-
+/**
+ * Quando necessitar de qury com resultado
+ * use a closure $query($sql)
+ */
 $query = function ($sql) use ($conn) {
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 };
+/**
+ * Quando for executar um insert,
+ * use a closure $insert($sql)
+ */
 $insert = function ($sql) use ($conn) {
     $stmt = $conn->prepare($sql);
     return $stmt->execute();
-    
 };
-// print_r($conn);
-// exit;
 use Spotpromo\Spotcli\Base;
 // Verifica se foi passado pelo menos um argumento
 // if ($argc < 2) {
 //     Base::getHelp();
 //     exit();
-// } else {
-//     Base::startCli($argv);
-// }
+//     } else {
+//         Base::startCli($argv);
+//     }
+//     exit;
 switch ($argv[2]) {
     case 'query':
         $table = $argv[3];
@@ -118,7 +120,7 @@ switch ($argv[2]) {
     break;
     case 'createmodule':
         $dir = readline("Qual o nome da pasta? \n");
-        $path = WORK_PATH.'/admin_new/modules';
+        $path = WORK_PATH.'/'.ROOTADMIN.'/modules';
         if (mkdir($path.'/'.$dir)){
             echo 'Pasta criada com Sucesso!';
         };
@@ -126,7 +128,7 @@ switch ($argv[2]) {
     case 'createquery':
         // print_r($argv);
         // exit;
-        $path = WORK_PATH.'/admin_new/modules';
+        $path = WORK_PATH.'/'.ROOTADMIN.'/modules';
         include('spotpromocli/AutoDataTables.php');
         $table =  strtoupper(readline("Qual o nome da tabela? \n"));
         $datatables = new AutodataTables;
@@ -141,7 +143,7 @@ switch ($argv[2]) {
             };
     break;
     case 'jscolumns':
-        $path = WORK_PATH.'/admin_new/modules';
+        $path = WORK_PATH.'/'.ROOTADMIN.'/modules';
         include('spotpromocli/AutoEditor.php');
         $columns = new AutoEditor;
         system('clear');
@@ -187,7 +189,7 @@ switch ($argv[2]) {
         $selectColuns = readline("Quais colunas que criar importação? Separe por '-' os numeros. >");
         echo 'Selecionados as colunas: '. str_replace('-', ' ,', $selectColuns);
         system('clear');
-        $path = WORK_PATH.'/admin_new/modules/importar_arquivos/archives/';
+        $path = WORK_PATH.'/'.ROOTADMIN.'/modules/importar_arquivos/archives/';
         include('spotpromocli/AutoImport.php');
         $excel = new AutoImport;
         // $selectColuns = $excel->getColsName($query($sql), $selectColuns);
@@ -208,8 +210,7 @@ switch ($argv[2]) {
         echo "\n".'**** Campo Columns ****'."\n";
         echo $excel->htmlTable($modelName, $query($sql));
         echo "\n".'**** Campo Columns ****'."\n";
-    break;
-    
+    break;  
     default:
         # code...
         break;

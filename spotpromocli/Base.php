@@ -6,7 +6,7 @@
  * Autor: Daniel Hogans
  * email: daniel.santos.ap@gmail.com
  * Create date: 06/04/2024
- * last alter date: 06/04/2024
+ * last alter date: 08/04/2024
  */
  class Base 
  {
@@ -77,7 +77,9 @@
     }
     public static function helpText()
     {
-        return "Comandos Base\n";
+        return "\e[92m Comandos Base:\n\e[39m"
+                ."Os comandos "
+                ;
     }
     public static function getEnv()
     {
@@ -125,7 +127,39 @@
     public static function execute($arguments)
     {
         $arguments = self::splitArgs($arguments);
-        print_r($arguments);
+        if(count($arguments) > 0){
+                self::{$arguments[0]}($arguments);
+                exit;
+            } else {
+                echo self::helpText();
+                exit;
+            }
+    }
+    public static function describe($arguments)
+    {
+        unset($arguments[0]);
+        foreach($arguments as $key => $value){
+                echo self::getInfo($value);
+        }
         exit;
+    }
+    public static function getInfo($typeInfo)
+    {
+        $info = '';
+        switch($typeInfo)
+        {
+            case 'system':
+                $info .= "\e[31mSistema: \e[39m". NOME_PROJETO."\n";
+                break;
+            case 'database';
+                $info .= "\e[31mBanco de dados: \e[39m". DB_NAME ."\n";
+                break;
+            case 'database';
+                $info .= "\e[31mBanco de dados: \e[39m". DB_NAME ."\n";
+                break;
+            default :
+                break;
+        }
+        return $info;
     }
  }

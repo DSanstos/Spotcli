@@ -69,5 +69,9 @@ class AutoEditor
         }
         return '';
     }
+    public static function helpText()
+    {
+        return '';
+    }
 
 }
