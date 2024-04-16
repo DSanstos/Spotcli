@@ -21,7 +21,8 @@
     public static function startCli($argv)
     {
         $argv = self::getArgs($argv);
-        $class = ucfirst($argv[1]); 
+        $class = ucfirst($argv[1]);
+
         if(file_exists(__DIR__.'/'.$class.'.php') && $class <> 'Base'){
             include( __DIR__.'/'.$class.'.php' );
             $command = new $class;
@@ -32,9 +33,9 @@
                 echo "Precisa de Argumentos!\n";
                 print_r($command->detail());
             } else {
+                // caso o comando seja a classe base
                 if(self::checkMethods($command, $arguments)){
                     unset($arguments[1]);
-                    print_r($arguments);
                     self::execute($arguments);
                     echo "aqui base";
                     exit;
@@ -78,7 +79,11 @@
     public static function helpText()
     {
         return "\e[92m Comandos Base:\n\e[39m"
-                ."Os comandos "
+                ."Os comandos para tarefas basicas das aplicações da SpotPromo."."\n"
+                . "\e[92m getinfo: \t\e[39m coleta informações do sistema corrente."."\n"
+                . "\t\t Parametros: \e[95m system, database\e[39m"."\n"
+                . "\t\t exemplo: \e[93m php spotcli\e[34m base getinfo \e[95m --system  --database\e[39m"."\n"
+                . "\e[92m outro: \t\e[39m coleta informações do sistema corrente."."\n"
                 ;
     }
     public static function getEnv()
@@ -94,7 +99,13 @@
     public static function baseTratament($arguments)
     {
         unset($arguments[1]);
-        self::execute(self::splitArgs($arguments));
+        // print_r($arguments);
+        // exit;
+        if (self::checkMethods(__CLASS__, $arguments[2])){
+            self::execute($arguments);
+        }
+        exit;
+        
     }
     public static function checkMethods($object, $arguments)
     {

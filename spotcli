@@ -42,6 +42,7 @@ $insert = function ($sql) use ($conn) {
 };
 use Spotpromo\Spotcli\Base;
 // Verifica se foi passado pelo menos um argumento
+
 // if ($argc < 2) {
 //     Base::getHelp();
 //     exit();
@@ -51,6 +52,10 @@ use Spotpromo\Spotcli\Base;
 //     exit;
 switch ($argv[2]) {
     case 'query':
+        if(!isset($argv[3])){
+            echo "\e[92m Favor informe uma tabela! do \n banco: ". DB_NAME;
+            exit;
+        }
         $table = $argv[3];
         $sql = 'SELECT COLUMN_NAME as colunas FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \''.$table.'\'';
         // $sql = 'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = \'BASE TABLE\'';
