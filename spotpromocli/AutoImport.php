@@ -45,7 +45,8 @@ class AutoImport
         // definir os tipo para o texto
         $types=[
             'int'=>'númerico',
-            'varchar'=> 'texto'
+            'varchar'=> 'texto',
+            'bit'=>'númerico'
         ];
         // aparte que deve ser copiada
         $html = '<tr> <!-- comentario -->
@@ -57,17 +58,38 @@ class AutoImport
             $html .= '<b> '. $value['COLUMN_NAME']. ': </b> ['.$types[$value['DATA_TYPE']].'] Exportar <a href="home.php?module=ZZZ/YYY"target="_blank"><u><i> AAA | BBB | CCC </i></u></a> e usar a primeira coluna;<br>'."\n";
         };
         $html.='</div>
-            </div>
-            <br>
-            <div class="row">
-                <div class="col-lg-12">
-                    Baixar aquivo de exemplo <b><a href="<?= $full_url ?>/<?= PASTA_PRINCIPAL ?>/modules/importar_arquivos/archives/'.$filename.'.xlsx">aqui</a></b>
-                    <br>
                 </div>
-            </div>
-        </td>
-    </tr>';
-    return $html;
+                <br>
+                <div class="row">
+                    <div class="col-lg-12">
+                        Baixar aquivo de exemplo <b><a href="<?= $full_url ?>/<?= PASTA_PRINCIPAL ?>/modules/importar_arquivos/archives/'.$filename.'.xlsx">aqui</a></b>
+                        <br>
+                    </div>
+                </div>
+            </td>
+        </tr>';
+        return $html;
+    }
+    public function givenType($conexao, $tipoArquivo, $dados)
+    {
+        $table = 'TIPO_ARQUIVO_IMPORTACAO';
+        $col = 'DES_TIPO_ARQUIVO_IMPORTACAO';
+        try {
+            // Prepara a consulta SQL para inserir os dados na tabela
+            // $sql = "INSERT INTO $tabela (" . implode(', ', array_keys($dados)) . ") VALUES (" . implode(', ', array_fill(0, count($dados), '?')) . ")";
+            $sql = "INSERT INTO TIPO_ARQUIVO_IMPORTACAO ( DES_TIPO_ARQUIVO_IMPORTACAO ) VALUES ('".$tipoArquivo."')";
+            $stmt = $conexao->prepare($sql);
+            // Executa a consulta com os valores dos dados
+            $stmt->execute(array_values($dados));
+            
+            // Retorna o ID da informação inserida
+            return $conexao->lastInsertId();
+        } catch (PDOException $e) {
+            // Em caso de erro, exibe a mensagem de erro
+            echo "Erro ao inserir dados: " . $e->getMessage();
+            return false;
+        }
+        return '';
     }
     public static function helpText()
     {

@@ -173,4 +173,25 @@
         }
         return $info;
     }
+    public function copyZip($nomeArquivoZip, $caminhoDestino) {
+        // Verifica se o arquivo ZIP existe
+        if (!file_exists($nomeArquivoZip)) {
+            die("O arquivo ZIP '$nomeArquivoZip' não existe.\n");
+        }
+        // Cria o diretório de destino se não existir
+        if (!is_dir($caminhoDestino)) {
+            mkdir($caminhoDestino, 0777, true);
+        }
+        // Extrai o conteúdo do arquivo ZIP
+        $zip = new \ZipArchive;
+        if ($zip->open($nomeArquivoZip) === true) {
+            // Extrai o conteúdo do ZIP para o caminho de destino
+            $zip->extractTo($caminhoDestino);
+            $zip->close();
+            
+            echo "Modulo criado com Sucesso! \n";
+        } else {
+            echo "Falha ao o modulo.\n";
+        }
+    }
  }

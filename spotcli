@@ -12,7 +12,7 @@ if (php_sapi_name() !== 'cli') {
 require __DIR__.'/vendor/autoload.php';
 require __DIR__.'/envcli.php';
 require WORK_PATH.'/env.php';
-// require_once WORK_PATH.'/admin_new/modules/bootstrap.php';
+// require_once WORK_PATH.'/admin/modules/bootstrap.php';
 function calldb() {
 	$hostname = DB_HOST;
 	$dbname   = DB_NAME;
@@ -50,7 +50,20 @@ use Spotpromo\Spotcli\Base;
 //         Base::startCli($argv);
 //     }
 //     exit;
-switch ($argv[2]) {
+
+if ($argc < 2) {
+    echo "\e[32m Digite algum parametro. \n"
+        . "menuquery - criar um menu \n"
+        . "createmodule - criar um modulo \n"
+        . "createquery - criar a query data \n"
+        . "jscolumns -  Lê o arquivo data.php e gera dados p index.php \n"
+        . "createimport - criar o import \n"
+        . "menupermission - Atribuição em massa  de menu\n"
+    ;
+    exit;
+};
+
+switch ($argv[1]) {
     case 'query':
         if(!isset($argv[3])){
             echo "\e[92m Favor informe uma tabela! do \n banco: ". DB_NAME;
@@ -125,29 +138,32 @@ switch ($argv[2]) {
     break;
     case 'createmodule':
         $dir = readline("Qual o nome da pasta? \n");
+        $zipfile = __DIR__.'/blankcrud.zip';
+        $lastdir = explode('/', $dir);
+        $module_name = $lastdir[array_key_last($lastdir)];
         $path = WORK_PATH.'/'.ROOTADMIN.'/modules';
-        if (mkdir($path.'/'.$dir)){
-            echo 'Pasta criada com Sucesso!';
-        };
+        include('spotpromocli/Base.php');
+        $base = new Base;
+        $base->copyZip($zipfile, $path.'/'.$dir, $module_name);
     break;
     case 'createquery':
-        // print_r($argv);
-        // exit;
         $path = WORK_PATH.'/'.ROOTADMIN.'/modules';
         include('spotpromocli/AutoDataTables.php');
+        include('spotpromocli/AutoEditor.php');
         $table =  strtoupper(readline("Qual o nome da tabela? \n"));
         $datatables = new AutodataTables;
         $sql = "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$table'";
         $resultSet = $query($sql);
-        if ($argv[3] == 'join'){
+        if (isset($argv[2]) && $argv[2] == 'join'){
                 echo $datatables->createQuery($table, $resultSet, true)."\n";
-                echo $datatables->joins($table, $argv[4])."\n";
-                echo $datatables->optionSelect($argv[4]);
+                echo $datatables->joins($table, $argv[3])."\n";
+                echo $datatables->optionSelect($argv[3]);
             } else {
                 echo $datatables->createQuery($table, $resultSet);
+                // print_r($indefile->creatJsColuns($resultSet));
             };
     break;
-    case 'jscolumns':
+    case 'jscolumns':                                                                                               
         $path = WORK_PATH.'/'.ROOTADMIN.'/modules';
         include('spotpromocli/AutoEditor.php');
         $columns = new AutoEditor;
@@ -179,12 +195,9 @@ switch ($argv[2]) {
         echo $columns->createTableRow($columns->CleanPatterms($patterns))."\n";
         echo '**** Campo fields ****'."\n";
         echo $columns->creatJsFields($columns->CleanPatterms($patterns))."\n";
-        // print_r($filename);
-        // $columns->getColums($a=1);
-        // echo 'data js columns';
     break;
     case 'createimport':
-        $table = strtoupper($argv[3]);
+        $table = strtoupper($argv[2]);
         $sql = 'SELECT COLUMN_NAME as colunas FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \''.$table.'\'';
         system('clear');
         echo '.....COLUNAS PARA IMPORTACAO......'."\n";
@@ -215,8 +228,36 @@ switch ($argv[2]) {
         echo "\n".'**** Campo Columns ****'."\n";
         echo $excel->htmlTable($modelName, $query($sql));
         echo "\n".'**** Campo Columns ****'."\n";
-    break;  
+    break;
+    case 'getinfo' :
+        echo "\e[39m \t Projeto:\e[34m\t" . str_replace('y:/', '', WORK_PATH) . "\e[39m \n"
+        . "\e[39m\t Database:\e[34m\t". DB_NAME ;
+        exit;
+    break;
+    case 'menupermission':
+        echo 'MENUS DISPONIVEIS :'."\n";
+        $sql = 'Select id, name, description from MenuNovo where status = 1 order by id';
+        foreach ($query($sql) as $key => $value) {
+            echo "\tid: \e[34m" .$value['id'] . "\e[39m - " .$value['name'] ."\n";
+        };
+        echo "\n";
+        $arrmenus = explode('-', readline('Anote os id´s dos menus que precisa, e separe por \'-\':'."\n"));
+        system('clear');
+        echo 'PARA QUAL PERFIL?';
+        $sql = 'SELECT COD_PERFIL, DES_PERFIL FROM PERFIL where STA_PERFIL=1';
+        foreach ($query($sql) as $key => $value) {
+            echo "\tid: \e[34m" .$value['COD_PERFIL'] . "\e[39m - " .$value['DES_PERFIL'] ."\n";
+        };
+        $perfilId = readline('PARA QUAL PERFIL? > ')."\n";
+        foreach ($arrmenus as $key => $value) {
+            // $sql = 'insert into MENU_VINCULO_PERFIL (COD_MENU, COD_PERFIL, EDITAR, ADICIONAR, EXPORTAR, REMOVER) VALUES ('.$value.', '.$perfilId.', 1, 1, 1, 0)';
+            $sql = 'insert into MenuAccess (profile_id, menu_id, fl_create, fl_update, fl_delete, fl_export, fl_import, dt_insert) VALUES 
+            ('.$perfilId.', '.$value.', 1, 1, 0, 1, 1, 1)';
+            $insert($sql);
+        }
+        echo 'Permissões atribuidas com sucesso!';
+        exit;
+        break;
     default:
-        # code...
         break;
 }

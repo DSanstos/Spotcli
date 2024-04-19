@@ -20,6 +20,7 @@ class AutoEditor
             // Verifica se a linha corresponde a algum dos padrões
             foreach ($padroes as $padrao) {
                 if (preg_match($padrao, $linha)) {
+                    // $linhasEncontradas[] = str_replace("'", '',$linha);
                     $linhasEncontradas[] = $linha;
                     break;
                     }
@@ -53,10 +54,10 @@ class AutoEditor
         $start = count($columns);
         foreach ($columns as $key => $value) {
             if ($start == 1){
-                echo '{ label: "'.$value.'", name: "'.$value.'", type: "text" }';
+                echo "{ label: $value, name: $value, type: 'text' }";
                 echo "\n";
                 } else {
-                    echo '{ label: "'.$value.'", name: "'.$value.'", type: "text" },'. "\n";
+                    echo "{ label: $value, name: $value, type: 'text' },\n";
                 }
             $start--;
         }
